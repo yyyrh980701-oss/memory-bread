@@ -1,0 +1,9 @@
+{
+  "name": "🥖记忆面包",
+  "short_name": "记忆面包",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f7f4ec",
+  "theme_color": "#f7f4ec",
+  "lang": "zh-CN"
+}

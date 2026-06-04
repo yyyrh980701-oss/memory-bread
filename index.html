@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f7f4ec" />
+    <title>🥖记忆面包</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <button class="reminder-banner" id="reminderBanner" hidden></button>
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Memory Bread</p>
+          <h1>🥖记忆面包</h1>
+        </div>
+        <button class="icon-button" id="resetDemo" aria-label="清空本地数据" title="清空本地数据">↺</button>
+      </header>
+
+      <nav class="tabs" aria-label="主导航">
+        <button class="tab active" data-view="import">导入</button>
+        <button class="tab" data-view="correct">学习</button>
+        <button class="tab" data-view="review">复习</button>
+        <button class="tab" data-view="settings">设置</button>
+        <button class="tab" data-view="stats">统计</button>
+      </nav>
+
+      <section class="view active" id="importView">
+        <div class="panel upload-panel">
+          <label class="file-drop">
+            <input id="fileInput" type="file" accept=".txt,.md,.docx,.pdf" />
+            <span class="drop-title">上传笔记文件</span>
+            <span class="drop-subtitle">支持 txt/md/docx/原生 PDF。扫描版 PDF 会提示接入 OCR。</span>
+          </label>
+          <div class="parse-status" id="parseStatus">也可以先粘贴文本，再整理成卡片。</div>
+          <div class="mode-switch" aria-label="制卡方式">
+            <label>
+              <input type="radio" name="cardMode" value="language" checked />
+              <span>中文 → 外语</span>
+            </label>
+            <label>
+              <input type="radio" name="cardMode" value="notes" />
+              <span>知识点</span>
+            </label>
+          </div>
+          <p class="mode-help" id="modeHelp">适合单词和短语笔记：中文做正面，外语做背面。</p>
+          <div class="ai-preview">
+            <div class="ai-preview-head">
+              <strong>AI 整理预览</strong>
+              <div class="preview-head-actions">
+                <span id="previewCount">等待导入</span>
+                <button class="mini-add-button" id="addPreviewCardBtn" aria-label="添加卡片" title="添加卡片">+</button>
+              </div>
+            </div>
+            <div class="preview-list" id="previewList">
+              <p class="muted">上传文档或粘贴文本后，这里会显示准备生成的闪卡。</p>
+            </div>
+          </div>
+          <details class="raw-details">
+            <summary>查看或粘贴解析原文</summary>
+            <textarea id="rawText" rows="8" placeholder="也可以直接粘贴乱七八糟的课堂笔记、PDF 复制文本、OCR 文本..."></textarea>
+            <button class="secondary-action" id="analyzeTextBtn">重新分析文本</button>
+          </details>
+          <button class="primary-action" id="structureBtn">将预览卡片送入学习</button>
+        </div>
+
+        <div class="status-grid">
+          <article>
+            <strong id="draftCount">0</strong>
+            <span>待学习</span>
+          </article>
+          <article>
+            <strong id="savedCount">0</strong>
+            <span>已入库</span>
+          </article>
+          <article>
+            <strong id="dueCount">0</strong>
+            <span>今日复习</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="view" id="correctView">
+        <div class="card-stage">
+          <div class="floating-tools">
+            <button class="floating-add" id="addLearningCardBtn" aria-label="添加卡片" title="添加卡片">+</button>
+            <button class="floating-source" id="sourceBtn">原文</button>
+          </div>
+          <article class="review-card" id="draftCard">
+            <div class="card-nav">
+              <button class="arrow-button" id="prevDraftBtn" aria-label="上一张卡片" title="上一张卡片">‹</button>
+              <p class="card-index" id="cardIndex">暂无待学习卡片</p>
+              <button class="arrow-button" id="nextDraftBtn" aria-label="下一张卡片" title="下一张卡片">›</button>
+            </div>
+            <label>
+              <span>正面</span>
+              <textarea id="frontEdit" rows="4" placeholder="问题 / 概念"></textarea>
+            </label>
+            <label>
+              <span>背面</span>
+              <textarea id="backEdit" rows="7" placeholder="答案 / 解析"></textarea>
+            </label>
+            <div class="ai-analysis" id="aiAnalysis" hidden></div>
+          </article>
+        </div>
+        <div class="bottom-actions">
+          <button class="danger-action" id="discardBtn">× 废弃此卡</button>
+          <button class="split-action" id="splitBtn">拆成多张</button>
+          <button class="confirm-action" id="saveBtn">✓ 加入复习</button>
+        </div>
+      </section>
+
+      <section class="view" id="reviewView">
+        <article class="review-card learn-card">
+          <p class="card-index" id="learnIndex">今日暂无复习</p>
+          <h2 id="learnFront">先导入几张卡片吧</h2>
+          <div class="answer" id="learnBack" hidden></div>
+          <button class="primary-action" id="revealBtn">显示答案</button>
+        </article>
+        <div class="grade-actions">
+          <button data-grade="again">忘了</button>
+          <button data-grade="hard">模糊</button>
+          <button data-grade="good">记得</button>
+          <button data-grade="easy">秒懂</button>
+        </div>
+        <div class="panel schedule-panel">
+          <h2>接下来复习</h2>
+          <p class="muted">根据当前复习进度显示最近几次安排。</p>
+          <div class="schedule-list" id="scheduleList"></div>
+        </div>
+      </section>
+
+      <section class="view" id="settingsView">
+        <div class="panel">
+          <h2>设置</h2>
+          <p class="muted">纠错记忆会在下次整理笔记前自动参与预处理。</p>
+          <button class="secondary-action" id="enableReminderBtn">开启复习提醒</button>
+          <p class="muted reminder-status" id="reminderStatus">网页打开时会检查到期卡片。</p>
+          <div class="settings-divider"></div>
+          <h2>纠错记忆</h2>
+          <p class="muted">你在确认卡片时做过的改动，会沉淀成下次预处理前的替换建议。</p>
+          <div class="glossary-list" id="glossaryList"></div>
+        </div>
+      </section>
+
+      <section class="view" id="statsView">
+        <div class="panel stats-panel">
+          <div class="stats-head">
+            <div>
+              <h2>复习记录</h2>
+              <p class="muted" id="statsSummary">还没有复习记录。</p>
+            </div>
+            <div class="period-switch" aria-label="统计周期">
+              <button class="active" data-period="week">周</button>
+              <button data-period="month">月</button>
+              <button data-period="year">年</button>
+            </div>
+          </div>
+          <div class="chart" id="statsChart"></div>
+          <div class="stats-grade" id="statsGrade"></div>
+        </div>
+      </section>
+    </main>
+
+    <dialog id="sourceDialog">
+      <div class="dialog-head">
+        <strong id="sourceTitle">原文对照</strong>
+        <button class="icon-button" id="closeSource" aria-label="关闭">×</button>
+      </div>
+      <img class="source-image" id="sourceImage" alt="笔记原页" hidden />
+      <pre id="sourceText"></pre>
+    </dialog>
+
+    <dialog id="splitDialog">
+      <div class="dialog-head">
+        <strong>拆成多张闪卡</strong>
+        <button class="icon-button" id="closeSplit" aria-label="关闭">×</button>
+      </div>
+      <p class="muted">每行一张卡，使用“中文 = 外语”。可以直接修改、删除或补充。</p>
+      <textarea id="splitText" rows="9" placeholder="放松 = tranquilo / tranquila&#10;对不起 = disculpe"></textarea>
+      <p class="split-hint" id="splitHint"></p>
+      <button class="primary-action" id="confirmSplitBtn">确认拆分</button>
+    </dialog>
+
+    <dialog id="previewEditDialog">
+      <div class="dialog-head">
+        <strong>修改预览卡片</strong>
+        <button class="icon-button" id="closePreviewEdit" aria-label="关闭">×</button>
+      </div>
+      <label class="dialog-field">
+        <span>正面</span>
+        <textarea id="previewFrontEdit" rows="3"></textarea>
+      </label>
+      <label class="dialog-field">
+        <span>背面</span>
+        <textarea id="previewBackEdit" rows="4"></textarea>
+      </label>
+      <button class="primary-action" id="savePreviewEdit">保存修改</button>
+    </dialog>
+
+    <dialog id="addCardDialog">
+      <div class="dialog-head">
+        <strong>添加卡片</strong>
+        <button class="icon-button" id="closeAddCard" aria-label="关闭">×</button>
+      </div>
+      <label class="dialog-field">
+        <span>正面</span>
+        <textarea id="addCardFront" rows="3" placeholder="中文、问题或概念"></textarea>
+      </label>
+      <label class="dialog-field">
+        <span>背面</span>
+        <textarea id="addCardBack" rows="4" placeholder="外语、答案或解析"></textarea>
+      </label>
+      <button class="primary-action" id="saveAddedCard">添加</button>
+    </dialog>
+
+    <div class="word-render-host" id="wordRenderHost" aria-hidden="true"></div>
+
+    <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
+    <script src="https://unpkg.com/docx-preview@0.3.6/dist/docx-preview.js"></script>
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
